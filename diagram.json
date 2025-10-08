@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "author": "Daniel Baião",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 9.6, "left": 158.44, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ph", "top": 89.6, "left": -229.6, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "umidity", "top": -239.7, "left": -63, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "irrigation", "top": -95.8, "left": 393.6, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "n",
+      "top": 246.2,
+      "left": -105.6,
+      "attrs": { "color": "green", "xray": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "p",
+      "top": 380.6,
+      "left": 134.4,
+      "attrs": { "color": "blue", "xray": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "k",
+      "top": 294.2,
+      "left": 259.2,
+      "attrs": { "color": "red", "xray": "1" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "n:1.l", "esp:32", "green", [ "h0" ] ],
+    [ "n:2.l", "esp:GND.1", "black", [ "h0" ] ],
+    [ "p:1.l", "esp:33", "green", [ "h0" ] ],
+    [ "p:2.l", "esp:GND.1", "black", [ "h0" ] ],
+    [ "k:1.l", "esp:25", "green", [ "h0" ] ],
+    [ "k:2.l", "esp:GND.1", "black", [ "h0" ] ],
+    [ "ph:VCC", "esp:3V3", "red", [ "h0" ] ],
+    [ "ph:GND", "esp:GND.1", "black", [ "h0" ] ],
+    [ "ph:AO", "esp:34", "green", [ "h0" ] ],
+    [ "umidity:VCC", "esp:3V3", "red", [ "h0" ] ],
+    [ "umidity:SDA", "esp:27", "green", [ "h0" ] ],
+    [ "umidity:GND", "esp:GND.1", "black", [ "h0" ] ],
+    [ "irrigation:VCC", "esp:3V3", "red", [ "h0" ] ],
+    [ "irrigation:IN", "esp:26", "blue", [ "h0" ] ],
+    [ "irrigation:GND", "esp:GND.1", "black", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}
