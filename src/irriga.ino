@@ -2,11 +2,21 @@
 
 // Definição dos pinos
 const int PIN_BTN_N = 32;      // Botão Nitrogênio
-const int PIN_BTN_P = 33;      // Botão Fósforo
-const int PIN_BTN_K = 25;      // Botão Potássio
+const int PIN_BTN_P = 14;      // Botão Fósforo
+const int PIN_BTN_K = 13;      // Botão Potássio
 const int PIN_SENSOR_PH = 34;  // Sensor pH (LDR)
-const int PIN_DHT = 27;        // Sensor DHT22
-const int PIN_BOMBA = 26;      // Relé da bomba d'água
+const int PIN_DHT = 21;        // Sensor DHT22
+const int PIN_BOMBA = 17;      // Relé da bomba d'água
+
+// Variáveis para armazenar o estado dos nutrientes
+bool estadoN = false;
+bool estadoP = false;
+bool estadoK = false;
+
+// Variáveis para armazenar o estado anterior dos botões
+bool lastBtnN = HIGH;
+bool lastBtnP = HIGH;
+bool lastBtnK = HIGH;
 
 // Configuração do sensor DHT22
 #define DHTTYPE DHT22
@@ -18,7 +28,6 @@ struct DadosSensores {
     bool nivelP;
     bool nivelK;
     float ph;
-    float temperatura;
     float umidade;
 };
 
@@ -34,9 +43,9 @@ void setup() {
     Serial.begin(115200);
     
     // Configura os pinos
-    pinMode(PIN_BTN_N, INPUT);
-    pinMode(PIN_BTN_P, INPUT);
-    pinMode(PIN_BTN_K, INPUT);
+    pinMode(PIN_BTN_N, INPUT_PULLUP);
+    pinMode(PIN_BTN_P, INPUT_PULLUP);
+    pinMode(PIN_BTN_K, INPUT_PULLUP);
     pinMode(PIN_BOMBA, OUTPUT);
     
     // Inicializa o sensor DHT
@@ -50,17 +59,39 @@ void setup() {
 DadosSensores lerSensores() {
     DadosSensores dados;
     
-    // Lê os botões NPK (LOW quando pressionado)
-    dados.nivelN = !digitalRead(PIN_BTN_N);
-    dados.nivelP = !digitalRead(PIN_BTN_P);
-    dados.nivelK = !digitalRead(PIN_BTN_K);
+    // Lê os estados atuais dos botões (LOW quando pressionado)
+    bool currentBtnN = digitalRead(PIN_BTN_N);
+    bool currentBtnP = digitalRead(PIN_BTN_P);
+    bool currentBtnK = digitalRead(PIN_BTN_K);
+    
+    // Verifica mudança de estado do botão N (falling edge)
+    if (currentBtnN == LOW && lastBtnN == HIGH) {
+        estadoN = !estadoN;  // Inverte o estado
+    }
+    lastBtnN = currentBtnN;
+    
+    // Verifica mudança de estado do botão P (falling edge)
+    if (currentBtnP == LOW && lastBtnP == HIGH) {
+        estadoP = !estadoP;  // Inverte o estado
+    }
+    lastBtnP = currentBtnP;
+    
+    // Verifica mudança de estado do botão K (falling edge)
+    if (currentBtnK == LOW && lastBtnK == HIGH) {
+        estadoK = !estadoK;  // Inverte o estado
+    }
+    lastBtnK = currentBtnK;
+    
+    // Atualiza os níveis com os estados armazenados
+    dados.nivelN = estadoN;
+    dados.nivelP = estadoP;
+    dados.nivelK = estadoK;
     
     // Lê o sensor de pH (LDR)
     int valorADC = analogRead(PIN_SENSOR_PH);
     dados.ph = (valorADC * 14.0) / 4095.0;  // Converte para escala pH (0-14)
     
-    // Lê temperatura e umidade
-    dados.temperatura = dht.readTemperature();
+    // Lê umidade
     dados.umidade = dht.readHumidity();
     
     return dados;
@@ -82,13 +113,6 @@ StatusSistema verificarCondicoesCafe(const DadosSensores& dados) {
     bool umidadeOk = dados.umidade >= 60 && dados.umidade <= 80;
     if (!umidadeOk) {
         String msg = "Umidade " + String(dados.umidade, 1) + "% fora do ideal (60-80%)";
-        status.mensagens[status.numMensagens++] = msg;
-    }
-    
-    // Verifica temperatura (ideal: 18°C - 25°C)
-    bool temperaturaOk = dados.temperatura >= 18 && dados.temperatura <= 25;
-    if (!temperaturaOk) {
-        String msg = "Temperatura " + String(dados.temperatura, 1) + "C fora do ideal (18-25C)";
         status.mensagens[status.numMensagens++] = msg;
     }
     
@@ -115,7 +139,6 @@ void imprimirStatus(const DadosSensores& dados, const StatusSistema& status) {
     Serial.println("Fósforo: " + String(dados.nivelP ? "Presente" : "Ausente"));
     Serial.println("Potássio: " + String(dados.nivelK ? "Presente" : "Ausente"));
     Serial.println("pH: " + String(dados.ph, 2));
-    Serial.println("Temperatura: " + String(dados.temperatura, 1) + "°C");
     Serial.println("Umidade: " + String(dados.umidade, 1) + "%");
     
     Serial.println("\n=== Status do Sistema ===");
@@ -144,6 +167,6 @@ void loop() {
     // Imprime o status no monitor serial
     imprimirStatus(dados, status);
     
-    // Aguarda 2 segundos antes da próxima leitura
-    delay(2000);
+    // Aguarda 1 segundo antes da próxima leitura
+    delay(1000);
 }

@@ -1,5 +1,10 @@
 # Sistema de Irrigação Inteligente para Cultivo de Café
 
+## Change log
+- Ajuste na lógica de gestão dos botões para simular a injeção de nutrientes N P K mediante inversão de estados, ou seja, se há deficiência de nutrientes, o acionamento supre a deficiência. Após novo acionamento, o estado se inverte, alertando novamente para a falta do nutriente.
+- Remoção de lógica de gestão de temperatura visto que não consta na demanda original.
+- Redução de refreshing de leitura para 1 segundo.
+
 ## Visão Geral do Projeto
 Este projeto implementa um sistema de irrigação automatizado para o cultivo de café, utilizando um ESP32 para monitorar e controlar diversos parâmetros cruciais para o desenvolvimento saudável da plantação. O sistema integra múltiplos sensores para monitorar nutrientes (NPK), pH do solo e umidade, tomando decisões automatizadas sobre a irrigação com base nas condições ideais para o cultivo do café.
 
@@ -20,9 +25,9 @@ Este projeto implementa um sistema de irrigação automatizado para o cultivo de
 
 - **Botões NPK:**
   - Botão N: GPIO32
-  - Botão P: GPIO33
-  - Botão K: GPIO25
-  - Todos com pull-down e conectados ao GND
+  - Botão P: GPIO14
+  - Botão K: GPIO13
+  - Todos com pull-up e conectados ao GND
 
 - **Sensor pH (LDR):**
   - Pino analógico: GPIO34
@@ -30,12 +35,12 @@ Este projeto implementa um sistema de irrigação automatizado para o cultivo de
   - GND: GND
 
 - **Sensor DHT22:**
-  - Pino de dados: GPIO27
+  - Pino de dados: GPIO21
   - VCC: 3.3V
   - GND: GND
 
 - **Relé da Bomba:**
-  - Pino de controle: GPIO26
+  - Pino de controle: GPIO17
   - VCC: 3.3V
   - GND: GND
 
@@ -61,17 +66,12 @@ Este projeto implementa um sistema de irrigação automatizado para o cultivo de
    - Potássio (K): Qualidade dos frutos
    - Monitoramento binário (presente/ausente)
 
-4. **Temperatura**
-   - Faixa ideal: 18°C a 25°C
-   - Monitorada pelo sensor DHT22
-   - Alertas para valores fora da faixa
-
 ## Lógica de Funcionamento
 
 ### Sistema de Irrigação
 1. **Coleta de Dados**
    - Leitura contínua de todos os sensores
-   - Intervalo de 2 segundos entre leituras
+   - Intervalo de 1 segundo entre leituras
    - Conversão de valores analógicos para escalas apropriadas
 
 2. **Análise de Condições**
@@ -88,7 +88,6 @@ Este projeto implementa um sistema de irrigação automatizado para o cultivo de
 - Indicação de pH fora da faixa ideal
 - Alertas de umidade inadequada
 - Notificação de deficiências de nutrientes
-- Avisos de temperatura inadequada
 
 ## Implementação
 
@@ -112,29 +111,14 @@ void imprimirStatus()
 
 ## Monitoramento
 - Display contínuo de leituras no monitor serial
-- Atualização a cada 2 segundos
+- Atualização a cada 1 segundo
 - Exibição de todos os parâmetros monitorados
 - Sistema de alertas em tempo real
 
-## Manutenção e Calibração
-
-### Ajustes Necessários
-1. **Sensor de pH (LDR)**
-   - Calibrar a conversão analógica para escala de pH
-   - Ajustar sensibilidade conforme necessidade
-
-2. **Sistema de Irrigação**
-   - Ajustar tempos de ativação da bomba
-   - Calibrar vazão conforme necessidade da plantação
-
-3. **Sensores NPK**
-   - Possibilidade de implementar sensores reais
-   - Ajustar lógica conforme sensores utilizados
-
 ## Demonstração
-https://youtu.be/Maczs9Bmi7M
+https://youtu.be/dFZmQBdduao
 
-## Colaboradores
+## Colaboradores Grupo 9
 Erik Criscuolo, Daniel Emilio Baião, 
 Marcus Vinícius Loureiro Garcia,
-Sidney William de Paula Dias
+Sidney William de Paula Dias, Hugo Rodrigues Carvalho Silva

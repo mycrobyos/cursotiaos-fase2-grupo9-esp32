@@ -1,52 +1,52 @@
 {
   "version": 1,
-  "author": "Daniel Baião",
+  "author": "grupo 9",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 9.6, "left": 158.44, "attrs": {} },
-    { "type": "wokwi-photoresistor-sensor", "id": "ph", "top": 89.6, "left": -229.6, "attrs": {} },
-    { "type": "wokwi-dht22", "id": "umidity", "top": -239.7, "left": -63, "attrs": {} },
-    { "type": "wokwi-relay-module", "id": "irrigation", "top": -95.8, "left": 393.6, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 163.2, "left": 196.84, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ph", "top": 70.4, "left": -66.4, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "umidity", "top": -18.9, "left": 215.4, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "irrigation", "top": 249.8, "left": 393.6, "attrs": {} },
     {
       "type": "wokwi-pushbutton",
       "id": "n",
-      "top": 246.2,
-      "left": -105.6,
+      "top": 217.4,
+      "left": 9.6,
       "attrs": { "color": "green", "xray": "1" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "p",
-      "top": 380.6,
-      "left": 134.4,
+      "top": 284.6,
+      "left": 9.6,
       "attrs": { "color": "blue", "xray": "1" }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "k",
-      "top": 294.2,
-      "left": 259.2,
+      "top": 351.8,
+      "left": 9.6,
       "attrs": { "color": "red", "xray": "1" }
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "n:1.l", "esp:32", "green", [ "h0" ] ],
-    [ "n:2.l", "esp:GND.1", "black", [ "h0" ] ],
-    [ "p:1.l", "esp:33", "green", [ "h0" ] ],
-    [ "p:2.l", "esp:GND.1", "black", [ "h0" ] ],
-    [ "k:1.l", "esp:25", "green", [ "h0" ] ],
-    [ "k:2.l", "esp:GND.1", "black", [ "h0" ] ],
-    [ "ph:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "ph:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "ph:AO", "esp:34", "green", [ "h0" ] ],
-    [ "umidity:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "umidity:SDA", "esp:27", "green", [ "h0" ] ],
-    [ "umidity:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "irrigation:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "irrigation:IN", "esp:26", "blue", [ "h0" ] ],
-    [ "irrigation:GND", "esp:GND.1", "black", [ "h0" ] ]
+    [ "esp:3V3", "irrigation:VCC", "white", [ "h0.15", "v-38.4", "h163.2", "v115.2" ] ],
+    [ "irrigation:IN", "esp:17", "blue", [ "h0" ] ],
+    [ "umidity:GND", "esp:GND.2", "black", [ "v28.8", "h67.2", "v67.2" ] ],
+    [ "irrigation:GND", "esp:GND.3", "black", [ "h-67.2", "v-29.2" ] ],
+    [ "umidity:VCC", "esp:3V3", "white", [ "v28.8", "h-48", "v67.2" ] ],
+    [ "umidity:SDA", "esp:21", "orange", [ "v48", "h105.7", "v96" ] ],
+    [ "ph:VCC", "esp:3V3", "white", [ "h57.6", "v105.6" ] ],
+    [ "ph:GND", "esp:GND.1", "black", [ "h48", "v220.4" ] ],
+    [ "ph:AO", "esp:34", "purple", [ "h28.8", "v114.5" ] ],
+    [ "p:2.r", "esp:GND.1", "black", [ "h77", "v9.8" ] ],
+    [ "p:1.r", "esp:14", "blue", [ "h96.2", "v-28.8" ] ],
+    [ "k:2.r", "esp:13", "red", [ "h105.8", "v-57.4", "h19.05" ] ],
+    [ "k:1.r", "esp:GND.1", "black", [ "h77", "v-48" ] ],
+    [ "n:2.r", "esp:32", "green", [ "h0" ] ],
+    [ "n:1.r", "esp:GND.1", "black", [ "v0", "h38.6", "v86.4" ] ]
   ],
   "dependencies": {}
 }
