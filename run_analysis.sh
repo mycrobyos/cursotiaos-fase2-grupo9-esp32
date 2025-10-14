@@ -23,6 +23,22 @@ function pio_cmd {
     fi
 }
 
+# ------------------------------------------------------------
+# PASSO 0.0: INSTALAR DEPENDÊNCIAS PYTHON
+# ------------------------------------------------------------
+echo "--- PASSO 0.0: INSTALANDO DEPENDÊNCIAS PYTHON ---"
+if [ -f "$REQUIREMENTS_FILE" ]; then
+    # É altamente recomendável usar um ambiente virtual (venv) para Python.
+    # Se você já tem um ativado, ele usará. Caso contrário, instalará globalmente ou no seu user.
+    python3 -m pip install -r "$REQUIREMENTS_FILE"
+    if [ $? -ne 0 ]; then
+        echo "ERRO: Falha na instalação das dependências Python. Verifique sua conexão ou ambiente."
+        exit 1
+    fi
+    echo "Dependências Python instaladas/verificadas com sucesso."
+else
+    echo "AVISO: Arquivo '$REQUIREMENTS_FILE' não encontrado. As dependências Python podem não estar instaladas."
+fi
 
 # ------------------------------------------------------------
 # PASSO 0.1: COMPILAÇÃO DO FIRMWARE
