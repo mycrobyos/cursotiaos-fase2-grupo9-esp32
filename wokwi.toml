@@ -1,6 +1,6 @@
 [wokwi]
 version = 1
-firmware = ".pio/build/esp32dev/firmware.bin"
-elf = ".pio/build/esp32dev/firmware.elf"
+firmware = ".pio/build/esp32/firmware.bin"
+elf = ".pio/build/esp32/firmware.elf"
 diagram = "diagram.json"
-rfc2217ServerPort = 4000 # Habilita a comunicação serial remota para captura de log
+rfc2217ServerPort = 4000 # NOVO: Habilita a comunicação serial remota

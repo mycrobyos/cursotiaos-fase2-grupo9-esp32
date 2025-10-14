@@ -13,8 +13,8 @@ const int PIN_DHT = 21;        // Sensor DHT22
 const int PIN_BOMBA = 17;      // Relé da bomba d'água
 
 // --- Configurações da Cultura (Café) ---
-const int PH_MIN_IDEAL = 5.5; 
-const int PH_MAX_IDEAL = 6.5; 
+const float PH_MIN_IDEAL = 5.5; 
+const float PH_MAX_IDEAL = 6.5; 
 const float UMIDADE_LIMITE = 60.0;
 
 // --- Variáveis de Estado (Mantidas do Colega) ---
