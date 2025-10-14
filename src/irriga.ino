@@ -174,8 +174,8 @@ void loop() {
     // 3. Aplica a lógica de decisão
     bool ligar_bomba = aplicarLogicaIrrigacao(dados, bloqueio_irrigacao);
     
-    // 4. Atuação: Atualiza o estado da bomba (LOW = Ligado)
-    digitalWrite(PIN_BOMBA, ligar_bomba ? LOW : HIGH);
+    // 4. Atuação: Atualiza o estado da bomba
+    digitalWrite(PIN_BOMBA, ligar_bomba ? HIGH : LOW);
     
     // 5. Imprime o status em formato CSV
     // A função aplicarLogicaIrrigacao não retorna as variáveis intermediárias,
