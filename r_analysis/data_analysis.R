@@ -80,7 +80,7 @@ print("\n=== Análise de Score de Deficiência (Para a Cultura do Tomate) ===")
 
 # Definir limites ideais para NPK, pH e Umidade para o Tomate
 # NPK_Presente (1 para presente, 0 para ausente)
-# PH_LDR (1500-2500 é ideal)
+# PH_LDR (5.5 - 6.5 é ideal)
 # Umidade_DHT (60% para baixo indica necessidade, 60-80% ideal para algumas análises)
 
 # Calculando um score de deficiência para cada observação
@@ -89,7 +89,7 @@ dados <- dados %>%
     Deficiencia_N = ifelse(N_Presente == 0, 1, 0),
     Deficiencia_P = ifelse(P_Presente == 0, 1, 0),
     Deficiencia_K = ifelse(K_Presente == 0, 1, 0),
-    Deficiencia_PH = ifelse(Valor_LDR < 1500 | Valor_LDR > 2500, 1, 0),
+    Deficiencia_PH = ifelse(Valor_LDR < 5.5 | Valor_LDR > 6.5, 1, 0),
     Deficiencia_Umidade = ifelse(Umidade_DHT < 60, 1, 0) # Foco em umidade baixa
   )
 
@@ -123,10 +123,10 @@ scatterplot_decisao <- ggplot(dados, aes(x = Umidade_DHT, y = Valor_LDR, color =
   # Adicionar linhas de referência da Lógica de Decisão (Tomate)
   # Umidade de Corte: 60%
   geom_vline(xintercept = 60, linetype = "dashed", color = "gray50") +
-  # pH de Corte (LDR Valor): 1500 e 2500
-  geom_hline(yintercept = 1500, linetype = "dashed", color = "gray50") +
-  geom_hline(yintercept = 2500, linetype = "dashed", color = "gray50") +
-  
+  # pH de Corte (LDR Valor): 5.5 e 6.5
+  geom_hline(yintercept = 5.5, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = 6.5, linetype = "dashed", color = "gray50") +
+
   labs(
     title = "Fronteira de Decisão de Irrigação (Umidade vs. pH/LDR)",
     x = "Umidade do Solo (%)",
