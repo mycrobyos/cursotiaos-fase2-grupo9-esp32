@@ -1,4 +1,8 @@
-#include <DHT.h>
+// **Sistema de Irrigação Inteligente - FarmTech Solutions (Unificado)**
+// Cultura: Café | Lógica: Completa + Bloqueio Externo | Saída: CSV
+
+#include <DHT.h> 
+#include <WiFi.h> // Mantido para compatibilidade PlatformIO
 
 // Definição dos pinos
 const int PIN_BTN_N = 32;      // Botão Nitrogênio
@@ -8,15 +12,22 @@ const int PIN_SENSOR_PH = 34;  // Sensor pH (LDR)
 const int PIN_DHT = 21;        // Sensor DHT22
 const int PIN_BOMBA = 17;      // Relé da bomba d'água
 
-// Variáveis para armazenar o estado dos nutrientes
+// --- Configurações da Cultura (Café) ---
+const int PH_MIN_IDEAL = 5.5; 
+const int PH_MAX_IDEAL = 6.5; 
+const float UMIDADE_LIMITE = 60.0;
+
+// --- Variáveis de Estado (Mantidas do Colega) ---
 bool estadoN = false;
 bool estadoP = false;
 bool estadoK = false;
-
-// Variáveis para armazenar o estado anterior dos botões
 bool lastBtnN = HIGH;
 bool lastBtnP = HIGH;
 bool lastBtnK = HIGH;
+
+// Variável de Bloqueio Externo (0=OK, 1=Bloqueio por API/R)
+int bloqueio_irrigacao = 0; 
+char dado_serial;
 
 // Configuração do sensor DHT22
 #define DHTTYPE DHT22
@@ -27,19 +38,12 @@ struct DadosSensores {
     bool nivelN;
     bool nivelP;
     bool nivelK;
-    float ph;
+    float valorLDR;
     float umidade;
 };
 
-// Estrutura para armazenar o status do sistema
-struct StatusSistema {
-    bool irrigar;
-    String mensagens[5];
-    int numMensagens;
-};
-
+// --- Setup ---
 void setup() {
-    // Inicializa comunicação serial
     Serial.begin(115200);
     
     // Configura os pinos
@@ -47,15 +51,27 @@ void setup() {
     pinMode(PIN_BTN_P, INPUT_PULLUP);
     pinMode(PIN_BTN_K, INPUT_PULLUP);
     pinMode(PIN_BOMBA, OUTPUT);
+    digitalWrite(PIN_BOMBA, HIGH); // Inicia Desligado (HIGH)
     
-    // Inicializa o sensor DHT
     dht.begin();
-    
-    Serial.println("Sistema de Irrigação Inteligente - Cultura do Café");
-    Serial.println("Iniciando...");
 }
 
-// Função para ler todos os sensores
+// Função para ler o Serial Remoto (API/R-Analysis)
+void lerStatusBloqueioSerial() {
+  while (Serial.available()) {
+    dado_serial = Serial.read();
+    
+    if (dado_serial == '1') {
+      bloqueio_irrigacao = 1;
+      Serial.println(">>> DADO EXTERNO RECEBIDO: BLOQUEIO ATIVADO <<<");
+    } else if (dado_serial == '0') {
+      bloqueio_irrigacao = 0;
+      Serial.println(">>> DADO EXTERNO RECEBIDO: BLOQUEIO DESATIVADO <<<");
+    }
+  }
+}
+
+// Função para ler os sensores (mantendo a lógica de TOGGLE do colega)
 DadosSensores lerSensores() {
     DadosSensores dados;
     
@@ -64,109 +80,112 @@ DadosSensores lerSensores() {
     bool currentBtnP = digitalRead(PIN_BTN_P);
     bool currentBtnK = digitalRead(PIN_BTN_K);
     
-    // Verifica mudança de estado do botão N (falling edge)
+    // Lógica de TOGGLE (Inverte o estado do nutriente com um toque)
     if (currentBtnN == LOW && lastBtnN == HIGH) {
-        estadoN = !estadoN;  // Inverte o estado
+        estadoN = !estadoN;
     }
     lastBtnN = currentBtnN;
     
-    // Verifica mudança de estado do botão P (falling edge)
     if (currentBtnP == LOW && lastBtnP == HIGH) {
-        estadoP = !estadoP;  // Inverte o estado
+        estadoP = !estadoP;
     }
     lastBtnP = currentBtnP;
     
-    // Verifica mudança de estado do botão K (falling edge)
     if (currentBtnK == LOW && lastBtnK == HIGH) {
-        estadoK = !estadoK;  // Inverte o estado
+        estadoK = !estadoK;
     }
     lastBtnK = currentBtnK;
     
-    // Atualiza os níveis com os estados armazenados
+    // Atualiza os níveis
     dados.nivelN = estadoN;
     dados.nivelP = estadoP;
     dados.nivelK = estadoK;
     
-    // Lê o sensor de pH (LDR)
-    int valorADC = analogRead(PIN_SENSOR_PH);
-    dados.ph = (valorADC * 14.0) / 4095.0;  // Converte para escala pH (0-14)
+    // Lê o sensor de pH (LDR) - Usamos o valor ADC bruto para a lógica
+    int valorLDR = analogRead(PIN_SENSOR_PH);
+    dados.valorLDR = (valorLDR * 14.0) / 4095.0;  // Converte para escala pH (0-14)
     
     // Lê umidade
     dados.umidade = dht.readHumidity();
+    if (isnan(dados.umidade)) {
+        dados.umidade = 100.0; // Valor seguro em caso de falha
+    }
     
     return dados;
 }
 
-// Função para verificar as condições ideais do café
-StatusSistema verificarCondicoesCafe(const DadosSensores& dados) {
-    StatusSistema status;
-    status.numMensagens = 0;
+// Função para aplicar a Lógica de Decisão (Cultura do Café)
+bool aplicarLogicaIrrigacao(const DadosSensores& dados, int bloqueio) {
     
-    // Verifica pH (ideal: 5.5 - 6.5)
-    bool phOk = dados.ph >= 5.5 && dados.ph <= 6.5;
-    if (!phOk) {
-        String msg = "pH " + String(dados.ph, 1) + " fora do ideal (5.5-6.5)";
-        status.mensagens[status.numMensagens++] = msg;
-    }
+    // Condição A: Umidade está Baixa (precisa irrigar?)
+    bool umidade_baixa = (dados.umidade < UMIDADE_LIMITE);
     
-    // Verifica umidade (ideal: 60% - 80%)
-    bool umidadeOk = dados.umidade >= 60 && dados.umidade <= 80;
-    if (!umidadeOk) {
-        String msg = "Umidade " + String(dados.umidade, 1) + "% fora do ideal (60-80%)";
-        status.mensagens[status.numMensagens++] = msg;
-    }
+    // Condição B: NPK está presente? (Café requer os 3)
+    bool npk_ok = (dados.nivelN && dados.nivelP && dados.nivelK);
     
-    // Verifica nutrientes
-    String deficiencias = "";
-    if (!dados.nivelN) deficiencias += "N ";
-    if (!dados.nivelP) deficiencias += "P ";
-    if (!dados.nivelK) deficiencias += "K ";
+    // Condição C: pH está na faixa ideal? (LDR entre 1500-2500)
+    bool ph_ideal = (dados.valorLDR >= PH_MIN_IDEAL && dados.valorLDR <= PH_MAX_IDEAL);
+
+    // Condição D: Bloqueio Externo Ativo?
+    bool irrigacao_bloqueada = (bloqueio == 1);
     
-    if (deficiencias.length() > 0) {
-        String msg = "Deficiência de nutrientes: " + deficiencias;
-        status.mensagens[status.numMensagens++] = msg;
-    }
-    
-    // Define se deve irrigar (quando umidade < 60%)
-    status.irrigar = dados.umidade < 60;
-    
-    return status;
+    // Regra Final: LIGA se (A E B E C) E (NÃO D)
+    bool ligar_bomba = umidade_baixa && npk_ok && ph_ideal && !irrigacao_bloqueada;
+
+    return ligar_bomba;
 }
 
-void imprimirStatus(const DadosSensores& dados, const StatusSistema& status) {
-    Serial.println("\n=== Leitura dos Sensores ===");
-    Serial.println("Nitrogênio: " + String(dados.nivelN ? "Presente" : "Ausente"));
-    Serial.println("Fósforo: " + String(dados.nivelP ? "Presente" : "Ausente"));
-    Serial.println("Potássio: " + String(dados.nivelK ? "Presente" : "Ausente"));
-    Serial.println("pH: " + String(dados.ph, 2));
-    Serial.println("Umidade: " + String(dados.umidade, 1) + "%");
+// Função para imprimir a saída em formato CSV (para Data Science)
+void imprimirSaidaCSV(const DadosSensores& dados, bool ligar_bomba, bool npk_ok, bool umidade_baixa, bool ph_ideal) {
     
-    Serial.println("\n=== Status do Sistema ===");
-    Serial.println(status.irrigar ? "IRRIGAÇÃO ATIVADA - Umidade abaixo do ideal" : "IRRIGAÇÃO DESATIVADA");
+    // -----------------------------------------------------------------------------------
+    // Saída no formato CSV: Timestamp,Umidade,LDR_Valor,N_Botao,P_Botao,K_Botao,pH_Ideal,Umidade_Baixa,NPK_OK,Relay_Status,Bloqueio_Externo
+    // -----------------------------------------------------------------------------------
+    Serial.print(millis()); Serial.print(",");
+    Serial.print(dados.umidade); Serial.print(",");
+    Serial.print(dados.valorLDR); Serial.print(",");
     
-    if (status.numMensagens > 0) {
-        Serial.println("\nAlertas:");
-        for (int i = 0; i < status.numMensagens; i++) {
-            Serial.println("- " + status.mensagens[i]);
-        }
-    } else {
-        Serial.println("\nTodas as condições estão ideais para o cultivo do café");
-    }
+    // Níveis NPK (0 ou 1)
+    Serial.print(dados.nivelN ? "1" : "0"); Serial.print(",");
+    Serial.print(dados.nivelP ? "1" : "0"); Serial.print(",");
+    Serial.print(dados.nivelK ? "1" : "0"); Serial.print(",");
+
+    // Decisões Intermediárias (0 ou 1)
+    Serial.print(ph_ideal ? "1" : "0"); Serial.print(",");
+    Serial.print(umidade_baixa ? "1" : "0"); Serial.print(",");
+    Serial.print(npk_ok ? "1" : "0"); Serial.print(",");
+
+    // Status Final (0 ou 1)
+    Serial.print(ligar_bomba ? "1" : "0"); Serial.print(",");
+    Serial.print(bloqueio_irrigacao ? "1" : "0"); 
+    
+    // Finaliza a linha CSV
+    Serial.println(); 
 }
+
 
 void loop() {
-    // Lê os dados dos sensores
+    // 1. Checa por bloqueio externo (API/R)
+    lerStatusBloqueioSerial();
+
+    // 2. Lê os dados dos sensores
     DadosSensores dados = lerSensores();
     
-    // Verifica as condições para o café
-    StatusSistema status = verificarCondicoesCafe(dados);
+    // 3. Aplica a lógica de decisão
+    bool ligar_bomba = aplicarLogicaIrrigacao(dados, bloqueio_irrigacao);
     
-    // Atualiza o estado da bomba
-    digitalWrite(PIN_BOMBA, status.irrigar);
+    // 4. Atuação: Atualiza o estado da bomba (LOW = Ligado)
+    digitalWrite(PIN_BOMBA, ligar_bomba ? LOW : HIGH);
     
-    // Imprime o status no monitor serial
-    imprimirStatus(dados, status);
+    // 5. Imprime o status em formato CSV
+    // A função aplicarLogicaIrrigacao não retorna as variáveis intermediárias,
+    // então as recalculamos aqui para o log (apenas NPK_OK, Umidade_Baixa, pH_Ideal):
+    bool umidade_baixa = (dados.umidade < UMIDADE_LIMITE);
+    bool npk_ok = (dados.nivelN && dados.nivelP && dados.nivelK);
+    bool ph_ideal = (dados.valorLDR >= PH_MIN_IDEAL && dados.valorLDR <= PH_MAX_IDEAL);
+
+    imprimirSaidaCSV(dados, ligar_bomba, npk_ok, umidade_baixa, ph_ideal);
     
-    // Aguarda 1 segundo antes da próxima leitura
-    delay(1000);
+    // Aguarda 5 segundos antes da próxima leitura (para o Data Science Pipeline)
+    delay(5000);
 }
