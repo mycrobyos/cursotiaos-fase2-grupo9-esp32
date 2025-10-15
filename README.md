@@ -100,19 +100,18 @@ chmod +x run_analysis.sh
 
 ## 📁 Estrutura de Arquivos e Entregáveis
 
-| Arquivo/Pasta                  | Descrição                                         | Status    |
-|--------------------------------|---------------------------------------------------|-----------|
-| README.md                      | Documentação principal do projeto                 | Completo  |
-| platformio.ini                 | Configuração do ambiente ESP32                    | Entregue  |
-| wokwi.toml                     | Configuração da simulação e Serial Remota         | Entregue  |
-| diagram.json                   | Diagrama de conexões do circuito                  | Entregue  |
-| src/main.cpp                   | Código C++ do ESP32 (Lógica + Saída CSV)          | Entregue  |
-| python_api/api_weather.py      | Opcional 1: Lógica de decisão de chuva            | Entregue  |
-| r_analysis/data_analysis.R     | Opcional 2: Script de análise estatística em R    | Entregue  |
-| r_analysis/log_capturer.py     | Automação: Captura de log Serial                  | Entregue  |
-| r_analysis/data_cleaner.py     | Automação: Limpeza e integração final de dados    | Entregue  |
-| run_analysis.sh                | Orquestrador Bash do pipeline de Data Science     | Entregue  |
-| media/video_demo_link.txt      | Link para a demonstração no YouTube (5 minutos)   | Pendente  |
+| Arquivo/Pasta                      | Descrição                                         | Status    |
+|------------------------------------|---------------------------------------------------|-----------|
+| README.md                          | Documentação principal do projeto                 | Completo  |
+| platformio.ini                     | Configuração do ambiente ESP32                    | Entregue  |
+| wokwi.toml                         | Configuração da simulação e Serial Remota         | Entregue  |
+| diagram.json                       | Diagrama de conexões do circuito                  | Entregue  |
+| src/main.cpp                       | Código C++ do ESP32 (Lógica + Saída CSV)          | Entregue  |
+| script/python_api/api_weather.py   | Opcional 1: Lógica de decisão de chuva            | Entregue  |
+| script/r_analysis/data_analysis.R  | Opcional 2: Script de análise estatística em R    | Entregue  |
+| script/r_analysis/log_capturer.py  | Automação: Captura de log Serial                  | Entregue  |
+| script/r_analysis/data_cleaner.py  | Automação: Limpeza e integração final de dados    | Entregue  |
+| run_analysis.sh                    | Orquestrador Bash do pipeline de Data Science     | Entregue  |
 
 ---
 
